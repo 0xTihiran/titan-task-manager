@@ -39,7 +39,6 @@ WorkloadSnapshot reconcileWorkloads(const QVariantList& thmWorkloads,
     if (telemetryAvailable) {
         for (const QVariant& entry : thmWorkloads) {
             QVariantMap workload = entry.toMap();
-            const int workloadId = workload.value("id").toInt();
             const qint64 root = workload.value("pid").toLongLong();
             const bool hasRoot = root > 0 && byPid.contains(root);
             workload.insert("stale", !hasRoot);

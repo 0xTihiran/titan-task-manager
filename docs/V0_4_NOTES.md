@@ -15,3 +15,13 @@
 - Official `ArchTitan.TitanUI`/`TitanTheme` imports require the actual OS repository.
 - No shared OS integration files were modified.
 - Tests must be compiled/executed in a Linux Qt6 development environment; this packaging environment lacks Qt6.
+
+## 0.4.1 bug fixes
+
+The `decisions` QtTest previously failed because the test used an app-less
+entry point, and `DecisionsModel` treated a `PeerClosedError` from a
+read-until-EOF UNIX socket as a query failure. The implementation now handles
+peer-close as successful completion when the socket was busy and preserves
+its accumulated response. A socket without a listening server still reports
+unavailable; oversized responses fail safely. Both async QtTest suites use
+`QTEST_GUILESS_MAIN` now. Run `ctest --test-dir build --output-on-failure`.

@@ -32,5 +32,5 @@ private slots:
         QTRY_COMPARE_WITH_TIMEOUT(monitor.focusedWorkspace(),7,2000);
     }
 };
-QTEST_APPLESS_MAIN(HyprlandTest)
+QTEST_GUILESS_MAIN(HyprlandTest)
 #include "test_hyprland.moc"

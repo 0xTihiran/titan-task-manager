@@ -35,10 +35,28 @@ DecisionsModel::DecisionsModel(QObject* parent, const QString& socketPath)
     connect(&m_socket, &QLocalSocket::disconnected, this, [this] {
         if (!m_busy) return;
         m_response += m_socket.readAll();
-        succeed();
+        if (m_response.size() > 65536) {
+            fail(QStringLiteral("THM response exceeded 64 KiB"));
+        } else {
+            succeed();
+        }
     });
-    connect(&m_socket, &QLocalSocket::errorOccurred, this, [this](QLocalSocket::LocalSocketError) {
-        if (m_busy) fail(m_socket.errorString());
+    connect(&m_socket, &QLocalSocket::errorOccurred, this,
+            [this](QLocalSocket::LocalSocketError error) {
+        if (!m_busy) return;
+        // THM's documented protocol ends a response by closing the stream.
+        // Qt can report PeerClosedError *before* emitting disconnected().
+        // Treat that peer close as EOF, not as a failed query.
+        if (error == QLocalSocket::PeerClosedError) {
+            m_response += m_socket.readAll();
+            if (m_response.size() > 65536) {
+                fail(QStringLiteral("THM response exceeded 64 KiB"));
+            } else {
+                succeed();
+            }
+            return;
+        }
+        fail(m_socket.errorString());
     });
     connect(&m_pollTimer, &QTimer::timeout, this, &DecisionsModel::refresh);
     m_pollTimer.start(5000);
