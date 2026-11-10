@@ -32,7 +32,7 @@ Item {
                     Text { text:"Live workload distribution across Hyprland workspaces"; color:Theme.textSecondary; font.family:Theme.font; font.pixelSize:12 }
                 }
                 Item { Layout.fillWidth:true }
-                StatusChip { label:"Telemetry-derived"; tone:Theme.warning }
+                StatusChip { label:hyprland.connected ? "Hyprland events connected" : "Telemetry fallback"; tone:hyprland.connected ? Theme.success : Theme.warning }
             }
             Panel {
                 Layout.fillWidth:true
@@ -40,8 +40,8 @@ Item {
                 RowLayout {
                     anchors.fill:parent
                     anchors.margins:15
-                    Rectangle { width:8; height:8; radius:4; color:Theme.warning }
-                    Text { text:"Focused-workspace detection via Hyprland IPC is not yet implemented; counts are from THM telemetry only."; color:Theme.textSecondary; font.family:Theme.font; font.pixelSize:12; wrapMode:Text.WordWrap; Layout.fillWidth:true }
+                    Rectangle { width:8; height:8; radius:4; color:hyprland.connected ? Theme.success : Theme.warning }
+                    Text { text:"Focused workspace: "+(hyprland.connected && hyprland.focusedWorkspace>0 ? String(hyprland.focusedWorkspace) : "waiting for event")+". Workload counts are reported by THM; focus events come from Hyprland socket2."; color:Theme.textSecondary; font.family:Theme.font; font.pixelSize:12; wrapMode:Text.WordWrap; Layout.fillWidth:true }
                 }
             }
             GridLayout {
@@ -56,6 +56,8 @@ Item {
                         property var stats:page.info(Number(modelData))
                         Layout.fillWidth:true
                         Layout.preferredHeight:145
+                        border.color:hyprland.connected && Number(modelData)===hyprland.focusedWorkspace ? Theme.accent : Theme.border
+                        border.width:hyprland.connected && Number(modelData)===hyprland.focusedWorkspace ? 2 : 1
                         ColumnLayout {
                             anchors.fill:parent
                             anchors.margins:17
@@ -63,6 +65,7 @@ Item {
                             RowLayout {
                                 Text { text:modelData===-2 ? "Headless pool" : (modelData===-1 ? "Unknown" : "Workspace "+modelData); font.family:Theme.font; font.pixelSize:14; font.weight:Font.DemiBold; color:Theme.textPrimary }
                                 Item { Layout.fillWidth:true }
+                                StatusChip { visible:hyprland.connected && Number(modelData)===hyprland.focusedWorkspace; label:"Focused"; tone:Theme.accent }
                                 Rectangle { width:9; height:9; radius:5; color:stats.count>0 ? Theme.accent : Theme.border }
                             }
                             Text { text:String(stats.count)+" workloads"; font.family:Theme.font; font.pixelSize:20; font.weight:Font.Bold; color:Theme.textPrimary }

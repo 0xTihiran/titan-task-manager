@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(titan-task-manager VERSION 0.3.0 LANGUAGES CXX)
+project(titan-task-manager VERSION 0.4.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
@@ -17,6 +17,8 @@ add_executable(titan-task-manager
     src/workloadtreecore.h src/workloadtreecore.cpp
     src/workloadtree.h src/workloadtree.cpp
     src/slicemodel.h src/slicemodel.cpp
+    src/decisionsmodel.h src/decisionsmodel.cpp
+    src/hyprlandmonitor.h src/hyprlandmonitor.cpp
     resources.qrc
 )
 target_link_libraries(titan-task-manager PRIVATE
@@ -40,4 +42,14 @@ if(BUILD_TESTING)
     target_include_directories(test_workloadtree PRIVATE src)
     target_link_libraries(test_workloadtree PRIVATE Qt6::Core Qt6::Test)
     add_test(NAME workloadtree COMMAND test_workloadtree)
+
+    add_executable(test_decisions tests/test_decisions.cpp src/decisionsmodel.cpp)
+    target_include_directories(test_decisions PRIVATE src)
+    target_link_libraries(test_decisions PRIVATE Qt6::Core Qt6::Network Qt6::Test)
+    add_test(NAME decisions COMMAND test_decisions)
+
+    add_executable(test_hyprland tests/test_hyprland.cpp src/hyprlandmonitor.cpp)
+    target_include_directories(test_hyprland PRIVATE src)
+    target_link_libraries(test_hyprland PRIVATE Qt6::Core Qt6::Network Qt6::Test)
+    add_test(NAME hyprland COMMAND test_hyprland)
 endif()
