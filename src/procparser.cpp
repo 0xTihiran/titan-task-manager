@@ -1,4 +1,5 @@
 #include "procparser.h"
+#include <QList>
 
 bool parseProcStat(const QByteArray& raw, ProcStat* result) {
     if (!result) return false;
