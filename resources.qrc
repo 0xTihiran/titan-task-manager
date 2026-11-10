@@ -1,0 +1,22 @@
+<RCC>
+  <qresource prefix="/titan-task-manager">
+    <file alias="qmldir">qml/qmldir</file>
+    <file alias="Main.qml">qml/Main.qml</file>
+    <file alias="Theme.qml">qml/Theme.qml</file>
+    <file alias="MetricTile.qml">qml/MetricTile.qml</file>
+    <file alias="Sparkline.qml">qml/Sparkline.qml</file>
+    <file alias="OverviewPage.qml">qml/OverviewPage.qml</file>
+    <file alias="WorkloadsPage.qml">qml/WorkloadsPage.qml</file>
+    <file alias="WorkloadCard.qml">qml/WorkloadCard.qml</file>
+    <file alias="ProcessTreeRow.qml">qml/ProcessTreeRow.qml</file>
+    <file alias="ProcessesPage.qml">qml/ProcessesPage.qml</file>
+    <file alias="WorkspacesPage.qml">qml/WorkspacesPage.qml</file>
+    <file alias="DecisionsPage.qml">qml/DecisionsPage.qml</file>
+    <file alias="SlicesPage.qml">qml/SlicesPage.qml</file>
+    <file alias="components/Panel.qml">qml/components/Panel.qml</file>
+    <file alias="components/StatusChip.qml">qml/components/StatusChip.qml</file>
+    <file alias="components/ActionButton.qml">qml/components/ActionButton.qml</file>
+    <file alias="components/EmptyView.qml">qml/components/EmptyView.qml</file>
+    <file alias="components/SectionTitle.qml">qml/components/SectionTitle.qml</file>
+  </qresource>
+</RCC>

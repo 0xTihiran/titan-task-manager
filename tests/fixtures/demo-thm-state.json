@@ -1,0 +1,112 @@
+{
+  "version": "3.1.0",
+  "timestamp_ms": 0,
+  "uptime_seconds": 1000,
+  "pressure": {
+    "level": "NORMAL",
+    "psi_some_avg10": 0.2,
+    "psi_full_avg10": 0,
+    "mem_used_pct": 32.5,
+    "mem_total_kb": 8192000,
+    "mem_available_kb": 5529600
+  },
+  "cpu": {
+    "psi_valid": true,
+    "psi_some_avg10": 1.2,
+    "psi_some_avg60": 0.4,
+    "psi_some_avg300": 0.2,
+    "load1": 1.1,
+    "load5": 1.0,
+    "load15": 0.9,
+    "runnable": 2,
+    "total": 154
+  },
+  "governor": "schedutil",
+  "workload_count": 5,
+  "active_workloads": 2,
+  "classified_workloads": 3,
+  "observed_workloads": 2,
+  "processes": {
+    "seen": 154,
+    "protected": 14,
+    "assigned": 19,
+    "unmanaged": 121,
+    "hyprland_connected": true
+  },
+  "top_unmanaged": [
+    {
+      "pid": 5412,
+      "comm": "sample-helper",
+      "cpu_pct": 1.1,
+      "mem_mb": 89,
+      "reason": "Unmanaged"
+    }
+  ],
+  "last_action": {
+    "decision": "PROMOTE",
+    "target": "archtitan-active",
+    "pid": 1173
+  },
+  "workloads": [
+    {
+      "id": 1,
+      "pid": 1173,
+      "workspace": 1,
+      "name": "Development workspace",
+      "type": "SYSTEM_DEV",
+      "state": "ACTIVE",
+      "pids": 8,
+      "mem_mb": 1300,
+      "cpu_pct": 22.7,
+      "observed": false
+    },
+    {
+      "id": 2,
+      "pid": 2311,
+      "workspace": 2,
+      "name": "Browser session",
+      "type": "BROWSER",
+      "state": "ACTIVE",
+      "pids": 6,
+      "mem_mb": 890,
+      "cpu_pct": 7.4,
+      "observed": true
+    },
+    {
+      "id": 3,
+      "pid": 3077,
+      "workspace": -2,
+      "name": "Media service",
+      "type": "MEDIA",
+      "state": "IDLE",
+      "pids": 3,
+      "mem_mb": 230,
+      "cpu_pct": 0.8,
+      "observed": true
+    },
+    {
+      "id": 4,
+      "pid": 4091,
+      "workspace": 3,
+      "name": "Build worker",
+      "type": "SYSTEM_DEV",
+      "state": "BACKGROUND_EXECUTING",
+      "pids": 1,
+      "mem_mb": 540,
+      "cpu_pct": 11.3,
+      "observed": false
+    },
+    {
+      "id": 5,
+      "pid": 5122,
+      "workspace": -1,
+      "name": "Terminal session",
+      "type": "NEUTRAL",
+      "state": "IDLE",
+      "pids": 1,
+      "mem_mb": 78,
+      "cpu_pct": 0.2,
+      "observed": false
+    }
+  ]
+}
