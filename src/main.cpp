@@ -1,8 +1,6 @@
 #include "ipcserver.h"
 #include "procmodel.h"
 #include "slicemodel.h"
-#include "decisionsmodel.h"
-#include "hyprlandmonitor.h"
 #include "systemmodel.h"
 #include "thmclient.h"
 #include "workloadtree.h"
@@ -44,8 +42,6 @@ int main(int argc,char** argv) {
     SystemModel system;
     ProcModel processes;
     SliceModel slices;
-    DecisionsModel decisions;
-    HyprlandMonitor hyprland;
     WorkloadTree workloadTree(&thm, &processes);
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("thm",&thm);
@@ -53,8 +49,6 @@ int main(int argc,char** argv) {
     engine.rootContext()->setContextProperty("proc",&processes);
     engine.rootContext()->setContextProperty("workloadTree",&workloadTree);
     engine.rootContext()->setContextProperty("slices",&slices);
-    engine.rootContext()->setContextProperty("decisions",&decisions);
-    engine.rootContext()->setContextProperty("hyprland",&hyprland);
     engine.load(QUrl("qrc:/titan-task-manager/Main.qml"));
     if(engine.rootObjects().isEmpty()) {qCritical()<<"Cannot load Main.qml"; return 1;}
     auto* window=qobject_cast<QQuickWindow*>(engine.rootObjects().first());

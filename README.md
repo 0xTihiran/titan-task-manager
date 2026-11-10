@@ -1,21 +1,14 @@
-# TITAN Task Manager — Dark Edition v0.4 (development preview)
+# TITAN Task Manager — Dark Edition v0.3 (development preview)
 
 Read-only desktop Task Manager for ArchTitan OS in **C++20 + Qt6 + QML**. This
-version extends the v0.3 dark dashboard with Linux `/proc` parsing, a workload
+version expands the v0.2 dark dashboard with Linux `/proc` parsing, a workload
 process tree, searchable workload/process reconciliation, and unit tests.
 
 **Status:** Source package provided. The app has **not** been compiled/run in
 this environment (Qt6 development libraries unavailable). Do not deploy to
 production or merge into the ArchTitan ISO without building/testing it first.
 
-## What's new in v0.4
-
-- Historical THM decisions from the **read-only** `/tmp/titan_hwm.sock` (`decisions 50`), with asynchronous polling, deadline, and bounded buffer. Override with `THM_SOCKET_PATH` for tests.
-- Hyprland workspace-focus events from `.socket2.sock`, with automatic reconnection and fallback session discovery. Focus is unknown until first event arrives.
-- Decisions page now shows history lines; Workspaces highlights the active workspace if the socket is connected.
-- Added socket-based QtTests and event parser tests; read `docs/V0_4_NOTES.md`.
-
-## Earlier v0.3 functionality
+## What's new in v0.3
 
 - WorkloadTree and a **pure reconciliation function** that maps THM root PIDs to
   Linux process parent-child relationships, without modifying THM or cgroups.
@@ -30,7 +23,7 @@ production or merge into the ArchTitan ISO without building/testing it first.
 - Dedicated, testable `/proc/<pid>/stat` parser for unusual names containing
   spaces or parentheses. Starts comparisons with starttime to avoid CPU spikes
   caused by PID reuse.
-- Four QtTest suites available through CTest.
+- Two QtTest suites available through CTest.
 
 ## Existing functionality from v0.2
 
@@ -95,7 +88,7 @@ workloads and cgroups.
 - Must still integrate `titan-sysmon/src/thmstate.*` and the **official**
   `ArchTitan.TitanUI` / `TitanTheme` from the actual repo. `qml/Theme.qml` is a
   centralized dark **preview only**, not official theme API.
-- Complete protection filter,
+- Hyprland focus IPC, historical THM decisions, complete protection filter,
   and OS menu/ISO/keybinding integrations are future milestones.
 - Shared OS files may be modified **only with lead approval**.
 
