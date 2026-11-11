@@ -1,4 +1,4 @@
-# TITAN Task Manager — Dark Edition v0.4.1 (socket-test fixes)
+# TITAN Task Manager — Dark Edition v0.4.2 (socket-test fixes)
 
 Read-only desktop Task Manager for ArchTitan OS in **C++20 + Qt6 + QML**. This
 version extends the v0.3 dark dashboard with Linux `/proc` parsing, a workload
@@ -8,7 +8,7 @@ process tree, searchable workload/process reconciliation, and unit tests.
 this environment (Qt6 development libraries unavailable). Do not deploy to
 production or merge into the ArchTitan ISO without building/testing it first.
 
-## v0.4.1 fixes
+## v0.4.2 fixes
 
 - Corrected THM decisions response parsing after normal peer close (EOF).
 - Changed socket-based QtTest entry points to `QTEST_GUILESS_MAIN`,
@@ -115,3 +115,9 @@ workloads and cgroups.
 Import and inspect the ArchTitan repository, then replace the temporary THM
 parser and theme with the *actual* repo-native interfaces. Run `./run-vm.sh`
 and check live THM workload root PIDs. Add unit tests using real sample telemetry.
+
+## v0.4.2 header compatibility fix
+
+Includes `<QList>` explicitly in `src/procparser.cpp` for Qt 6.12 / GCC 16.
+Earlier source versions may fail compilation because Qt headers no longer expose
+the full `QList` class transitively.
