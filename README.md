@@ -1,4 +1,4 @@
-# TITAN Task Manager — Dark Edition v0.4.2 (socket-test fixes)
+# TITAN Task Manager — Dark Edition v0.5 (read-only protection diagnostics)
 
 Read-only desktop Task Manager for ArchTitan OS in **C++20 + Qt6 + QML**. This
 version extends the v0.3 dark dashboard with Linux `/proc` parsing, a workload
@@ -7,6 +7,19 @@ process tree, searchable workload/process reconciliation, and unit tests.
 **Status:** Source package provided. The app has **not** been compiled/run in
 this environment (Qt6 development libraries unavailable). Do not deploy to
 production or merge into the ArchTitan ISO without building/testing it first.
+
+## v0.5 changes
+
+- Conservative `ProtectionFilter` labels known THM, system, compositor, browser,
+  and cgroup-owned processes as `PROTECTED`. Unknown/unmatched processes are
+  labelled `UNVERIFIED`; **neither is permission to terminate**.
+- `ProcModel` reads real/effective UID from `/proc/<pid>/status` and records whether
+  the UID data could be verified.
+- Added PID + starttime matching helper to detect recycled identities.
+- Processes page displays ACCESS = LOCKED/VERIFY, filters protected entries,
+  and explains protection/uncertainty in the inspector.
+- Added `protectionfilter` as a fifth QtTest suite.
+- See `docs/V0_5_NOTES.md` for limitations and validation steps.
 
 ## v0.4.2 fixes
 
@@ -41,7 +54,7 @@ production or merge into the ArchTitan ISO without building/testing it first.
 - Dedicated, testable `/proc/<pid>/stat` parser for unusual names containing
   spaces or parentheses. Starts comparisons with starttime to avoid CPU spikes
   caused by PID reuse.
-- Four QtTest suites available through CTest.
+- Five QtTest suites available through CTest, including v0.5 protectionfilter.
 
 ## Existing functionality from v0.2
 
@@ -98,15 +111,15 @@ workloads and cgroups.
 ## Hard limits / still pending
 
 - No process termination, force kill, frozen-state changes, system controller
-  writes, or privilege escalation. Process action gates need the **tested**
-  official `ProtectionFilter` before implementation.
+  writes, or privilege escalation. Process action gates require the **official** THM registry, stronger
+  runtime checks and tests before implementation; the v0.5 filter is diagnostic only.
 - Root PID to subtree association is best-effort; THM telemetry has no member
   PIDs or root starttime. Reparented descendants cannot be identified solely
   through ancestry, and recycled roots may be misclassified in the UI.
 - Must still integrate `titan-sysmon/src/thmstate.*` and the **official**
   `ArchTitan.TitanUI` / `TitanTheme` from the actual repo. `qml/Theme.qml` is a
   centralized dark **preview only**, not official theme API.
-- Complete protection filter,
+- Official protection registry, safe actions,
   and OS menu/ISO/keybinding integrations are future milestones.
 - Shared OS files may be modified **only with lead approval**.
 
@@ -121,3 +134,5 @@ and check live THM workload root PIDs. Add unit tests using real sample telemetr
 Includes `<QList>` explicitly in `src/procparser.cpp` for Qt 6.12 / GCC 16.
 Earlier source versions may fail compilation because Qt headers no longer expose
 the full `QList` class transitively.
+
+> v0.5 remains **read-only**. This package was not built or executed on Qt6 in the authoring environment.

@@ -1,5 +1,6 @@
 #include "procmodel.h"
 #include "procparser.h"
+#include "procidentity.h"
 
 #include <QDir>
 #include <QFile>
@@ -63,7 +64,14 @@ void ProcModel::refresh() {
         item.insert("cpu", cpu);
         item.insert("memoryMiB", memory);
         item.insert("rssKb", pageSize > 0 && stat.rssPages > 0 ? stat.rssPages * (pageSize / 1024) : 0);
-        item.insert("uid", QFileInfo(path).ownerId());
+        qint64 realUid = -1;
+        qint64 effectiveUid = -1;
+        QFile statusFile(path + QStringLiteral("/status"));
+        const bool uidVerified = statusFile.open(QIODevice::ReadOnly)
+            && parseProcUids(statusFile.read(16384), &realUid, &effectiveUid);
+        item.insert("uid", realUid);
+        item.insert("effectiveUid", effectiveUid);
+        item.insert("uidVerified", uidVerified);
         item.insert("startTime", QVariant::fromValue(stat.starttime));
         item.insert("exe", QFileInfo(path + QStringLiteral("/exe")).symLinkTarget());
         item.insert("cwd", QFileInfo(path + QStringLiteral("/cwd")).symLinkTarget());

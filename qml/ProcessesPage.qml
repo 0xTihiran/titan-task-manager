@@ -18,6 +18,7 @@ Item {
         })
         if(filterMode==="Managed") items=items.filter(function(p){return Number(p.workloadId)!==0})
         if(filterMode==="Unmatched") items=items.filter(function(p){return Number(p.workloadId)===0})
+        if(filterMode==="Protected") items=items.filter(function(p){return p.isProtected === true})
         if(sortMode==="Memory") items.sort(function(a,b){return Number(b.memoryMiB)-Number(a.memoryMiB)})
         else if(sortMode==="PID") items.sort(function(a,b){return Number(a.pid)-Number(b.pid)})
         else if(sortMode==="Name") items.sort(function(a,b){return String(a.name).localeCompare(String(b.name))})
@@ -37,7 +38,7 @@ Item {
             ColumnLayout {
                 spacing:4
                 Text { text:"Processes"; color:Theme.textPrimary; font.family:Theme.font; font.pixelSize:23; font.weight:Font.Bold }
-                Text { text:"Read-only Linux process table with THM workload reconciliation"; color:Theme.textSecondary; font.pixelSize:12 }
+                Text { text:"Read-only Linux processes · THM assignment and protection diagnostics"; color:Theme.textSecondary; font.pixelSize:12 }
             }
             Item { Layout.fillWidth:true }
             StatusChip { label:String(proc.count)+" running"; tone:Theme.accent }
@@ -46,7 +47,7 @@ Item {
         RowLayout {
             spacing:7
             Repeater {
-                model:["All","Managed","Unmatched"]
+                model:["All","Managed","Unmatched","Protected"]
                 delegate:Rectangle {
                     required property string modelData
                     width:filterText.implicitWidth+22; height:32; radius:9
@@ -89,6 +90,7 @@ Item {
                         Text { text:"RAM MiB"; Layout.preferredWidth:74; color:Theme.textLow; font.pixelSize:10 }
                         Text { text:"WORKLOAD"; Layout.preferredWidth:148; color:Theme.textLow; font.pixelSize:10 }
                         Text { text:"STATE"; Layout.preferredWidth:43; color:Theme.textLow; font.pixelSize:10 }
+                        Text { text:"ACCESS"; Layout.preferredWidth:85; color:Theme.textLow; font.pixelSize:10 }
                     }
                 }
                 Item {
@@ -116,6 +118,7 @@ Item {
                                 Text { text:Number(processRow.modelData.memoryMiB).toFixed(1); Layout.preferredWidth:74; color:Theme.textSecondary; font.pixelSize:12 }
                                 Text { text:processRow.modelData.workloadName || processRow.modelData.assignment; Layout.preferredWidth:148; elide:Text.ElideRight; color:Theme.textSecondary; font.pixelSize:11 }
                                 Text { text:processRow.modelData.state || "?"; Layout.preferredWidth:43; color:Theme.textLow; font.pixelSize:12 }
+                                Text { text:processRow.modelData.isProtected ? "LOCKED" : "VERIFY"; Layout.preferredWidth:85; color:processRow.modelData.isProtected ? Theme.danger : Theme.warning; font.pixelSize:10; font.weight:Font.DemiBold }
                             }
                             MouseArea { anchors.fill:parent; cursorShape:Qt.PointingHandCursor; onClicked:page.selectedPid=Number(processRow.modelData.pid) }
                         }
@@ -126,7 +129,7 @@ Item {
         Panel {
             id:inspector
             Layout.fillWidth:true
-            Layout.preferredHeight:page.selectedPid>0 ? 180 : 45
+            Layout.preferredHeight:page.selectedPid>0 ? 223 : 45
             ColumnLayout {
                 anchors.fill:parent
                 anchors.margins:12
@@ -148,9 +151,19 @@ Item {
                     Text { text:"CWD: " + (page.selectedProcess() ? (page.selectedProcess().cwd || "unavailable") : "—"); color:Theme.textSecondary; font.pixelSize:11; elide:Text.ElideMiddle; Layout.fillWidth:true }
                     Text { text:"Command: " + (page.selectedProcess() ? (page.selectedProcess().cmdline || "unavailable") : "—"); color:Theme.textLow; font.pixelSize:11; elide:Text.ElideRight; Layout.fillWidth:true }
                     Text { text:"Cgroup: " + (page.selectedProcess() ? (page.selectedProcess().cgroup || "unavailable") : "—"); color:Theme.textLow; font.pixelSize:11; elide:Text.ElideRight; Layout.fillWidth:true }
+                    Text {
+                        text:"Protection: " + (page.selectedProcess() ? page.selectedProcess().protectionStatus : "PROCESS EXITED")
+                        color:page.selectedProcess() && page.selectedProcess().isProtected ? Theme.danger : Theme.warning
+                        font.pixelSize:11; font.weight:Font.DemiBold
+                    }
+                    Text {
+                        text:page.selectedProcess() ? page.selectedProcess().terminateReason : "Process no longer exists in current snapshot"
+                        color:Theme.textSecondary; font.pixelSize:11; Layout.fillWidth:true
+                        elide:Text.ElideRight
+                    }
                 }
             }
         }
-        Text { text:"Unmatched does not mean safe to terminate. Actions remain disabled until the protection model is tested."; color:Theme.textLow; font.pixelSize:11 }
+        Text { text:"Read-only v0.5: PROTECTED = deny; VERIFY = insufficient proof. Neither state permits termination."; color:Theme.textLow; font.pixelSize:11 }
     }
 }

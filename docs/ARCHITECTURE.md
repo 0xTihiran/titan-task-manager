@@ -78,3 +78,13 @@ ctest --test-dir build --output-on-failure
 ```
 
 The above tests require the ArchTitan/Arch Linux Qt6 development environment.
+
+
+## v0.5 protection diagnostics (read-only)
+
+`ProcModel` adds verified real/effective UID properties from `/proc/[pid]/status`.
+`WorkloadTree` passes each reconciled process to pure `assessProcessProtection`.
+Known protected or managed processes are marked `PROTECTED`; all others stay
+`UNVERIFIED` until the official THM registry and runtime proof are available.
+**`canTerminate=false` for every process.** No signals, cgroup writes, or
+privilege escalation are implemented. See `docs/V0_5_NOTES.md`.

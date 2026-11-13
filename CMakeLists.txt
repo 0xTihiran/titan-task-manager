@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(titan-task-manager VERSION 0.4.1 LANGUAGES CXX)
+project(titan-task-manager VERSION 0.5.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
@@ -13,6 +13,8 @@ add_executable(titan-task-manager
     src/thmclient.h src/thmclient.cpp
     src/systemmodel.h src/systemmodel.cpp
     src/procparser.h src/procparser.cpp
+    src/procidentity.h src/procidentity.cpp
+    src/protectionfilter.h src/protectionfilter.cpp
     src/procmodel.h src/procmodel.cpp
     src/workloadtreecore.h src/workloadtreecore.cpp
     src/workloadtree.h src/workloadtree.cpp
@@ -42,6 +44,13 @@ if(BUILD_TESTING)
     target_include_directories(test_workloadtree PRIVATE src)
     target_link_libraries(test_workloadtree PRIVATE Qt6::Core Qt6::Test)
     add_test(NAME workloadtree COMMAND test_workloadtree)
+
+    add_executable(test_protectionfilter
+        tests/test_protectionfilter.cpp
+        src/protectionfilter.cpp src/procidentity.cpp)
+    target_include_directories(test_protectionfilter PRIVATE src)
+    target_link_libraries(test_protectionfilter PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME protectionfilter COMMAND test_protectionfilter)
 
     add_executable(test_decisions tests/test_decisions.cpp src/decisionsmodel.cpp)
     target_include_directories(test_decisions PRIVATE src)

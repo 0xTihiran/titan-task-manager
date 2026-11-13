@@ -115,17 +115,21 @@ WorkloadSnapshot reconcileWorkloads(const QVariantList& thmWorkloads,
             const QVariantMap workload = result.workloads[index].toMap();
             proc.insert("workloadId", workload.value("id"));
             proc.insert("workloadName", workload.value("name"));
+            proc.insert("workloadType", workload.value("type"));
+            proc.insert("workloadObserved", workload.value("observed"));
             proc.insert("assignment", "THM managed");
             ++result.matched;
         } else {
             proc.insert("workloadId", 0);
             proc.insert("workloadName", "");
+            proc.insert("workloadType", "");
+            proc.insert("workloadObserved", false);
             // Never claim a process is safely unmanaged based solely on ancestry.
             proc.insert("assignment", telemetryAvailable ? "Unmatched" : "THM unavailable");
             ++result.unmatched;
         }
         proc.insert("canTerminate",false);
-        proc.insert("terminateReason","Read-only prototype; protection checks not implemented");
+        proc.insert("terminateReason","Read-only: a complete protection check is required");
         result.processes.append(proc);
     }
     return result;
