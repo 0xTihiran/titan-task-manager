@@ -61,5 +61,5 @@ ActionPreflight evaluateActionPreflight(const QVariantMap& cached,
     // become implicit authorization. No compile switch or environment variable
     // can turn this release into a process-signal sender.
     return block(QStringLiteral("REGISTRY_UNVERIFIED"),
-                 QStringLiteral("THM dynamic PID registry and authoritative workload membership checks are not available"));
+                 QStringLiteral("Official THM registry and fresh workload membership verification are not integrated"));
 }

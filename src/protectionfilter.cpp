@@ -2,7 +2,6 @@
 
 #include <QFileInfo>
 #include <QSet>
-#include "protected_registry.hpp" // Canonical ArchTitan THM static registry
 
 namespace {
 ProtectionAssessment deny(const QString& reason) {
@@ -12,44 +11,43 @@ ProtectionAssessment unverified(const QString& reason) {
     return {false, false, QStringLiteral("UNVERIFIED"), reason};
 }
 
-// Canonical static sets are read directly from the repo-owned THM registry.
-// NOTE: the daemon's *dynamic* PID registrations are private and cannot be
-// inspected through a new registry instance. No process actions are enabled.
+// Interim conservative subset inferred from the build plan. NOT the official
+// THM registry. In particular, names can be truncated in /proc/<pid>/stat.
 bool protectedName(const QString& name) {
-    if (name.isEmpty()) return false;
-    const std::string value = name.toStdString();
-    if (thm::protected_names().contains(value) || thm::browser_names().contains(value))
-        return true;
-    // Conservative additions for ArchTitan-owned apps and Linux's truncated
-    // /proc/<pid>/comm. These are locally stricter than THM's named sets.
-    static const QSet<QString> extras {
-        QStringLiteral("titan-sysmon"), QStringLiteral("titan-quicksettings"),
-        QStringLiteral("titan-sandboxd"), QStringLiteral("archtitan-settings"),
-        QStringLiteral("systemd-journald"), QStringLiteral("gdm"),
-        QStringLiteral("lightdm"), QStringLiteral("Xorg"), QStringLiteral("Xwayland")
+    static const QSet<QString> names{
+        QStringLiteral("titan-task-manager"), QStringLiteral("titan-hwm"),
+        QStringLiteral("titan-hwm-daemon"), QStringLiteral("titan-ai"),
+        QStringLiteral("titan-share"), QStringLiteral("titan-mirror"),
+        QStringLiteral("titan-sandboxd"), QStringLiteral("titan-sysmon"),
+        QStringLiteral("titan-quicksettings"), QStringLiteral("archtitan-settings"),
+        QStringLiteral("Hyprland"), QStringLiteral("pipewire"),
+        QStringLiteral("wireplumber"), QStringLiteral("systemd"),
+        QStringLiteral("systemd-journald"), QStringLiteral("systemd-logind"),
+        QStringLiteral("dbus-daemon"), QStringLiteral("dbus-broker"),
+        QStringLiteral("NetworkManager"), QStringLiteral("wpa_supplicant"),
+        QStringLiteral("gdm"), QStringLiteral("sddm"), QStringLiteral("lightdm"),
+        QStringLiteral("Xorg"), QStringLiteral("Xwayland"),
+        QStringLiteral("firefox"), QStringLiteral("chromium"),
+        QStringLiteral("chrome"), QStringLiteral("brave"),
+        QStringLiteral("vivaldi"), QStringLiteral("zen")
     };
-    return extras.contains(name) ||
-        name.startsWith(QStringLiteral("titan-"), Qt::CaseInsensitive) ||
-        name.startsWith(QStringLiteral("archtitan-"), Qt::CaseInsensitive) ||
-        name.startsWith(QStringLiteral("firefox"), Qt::CaseInsensitive) ||
-        name.startsWith(QStringLiteral("chrome"), Qt::CaseInsensitive) ||
-        name.startsWith(QStringLiteral("chromium"), Qt::CaseInsensitive);
+    return names.contains(name) || name.startsWith(QStringLiteral("titan-"), Qt::CaseInsensitive)
+        || name.startsWith(QStringLiteral("archtitan-"), Qt::CaseInsensitive)
+        || name.startsWith(QStringLiteral("firefox"), Qt::CaseInsensitive)
+        || name.startsWith(QStringLiteral("chrome"), Qt::CaseInsensitive)
+        || name.startsWith(QStringLiteral("chromium"), Qt::CaseInsensitive);
 }
 
 bool protectedExe(const QString& exe) {
-    if (!exe.startsWith(QLatin1Char('/'))) return false;
-    for (const std::string& prefix : thm::protected_exe_prefixes()) {
-        if (exe.startsWith(QString::fromStdString(prefix))) return true;
-    }
-    for (const std::string& prefix : thm::browser_exe_prefixes()) {
-        if (exe.startsWith(QString::fromStdString(prefix))) return true;
-    }
-    // Additional conservative checks; they never authorize a process action.
-    if (exe.startsWith(QStringLiteral("/usr/lib/systemd/")) ||
-        exe.startsWith(QStringLiteral("/usr/libexec/"))) return true;
-    return protectedName(QFileInfo(exe).fileName());
+    if (!exe.startsWith('/')) return false;
+    if (exe.startsWith(QStringLiteral("/usr/lib/systemd/"))
+        || exe.startsWith(QStringLiteral("/usr/libexec/"))
+        || exe.startsWith(QStringLiteral("/usr/bin/titan"))
+        || exe.startsWith(QStringLiteral("/usr/local/bin/titan"))
+        || exe.startsWith(QStringLiteral("/usr/lib/firefox/"))) return true;
+    const QString basename = QFileInfo(exe).fileName();
+    return protectedName(basename);
 }
-
 }
 
 ProtectionAssessment assessProcessProtection(const QVariantMap& process,
@@ -66,7 +64,7 @@ ProtectionAssessment assessProcessProtection(const QVariantMap& process,
     const QString name = process.value("name").toString();
     const QString exe = process.value("exe").toString();
     if (protectedName(name) || protectedExe(exe))
-        return deny(QStringLiteral("THM protected/browser registry or additional conservative system rule (read-only)"));
+        return deny(QStringLiteral("Known system, ArchTitan, desktop, or browser executable (provisional registry)"));
 
     // A managed relationship is always protected. Do not rely solely on the
     // numeric ID: the mapper may not have an ID for malformed telemetry.

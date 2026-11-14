@@ -36,5 +36,14 @@
    python3 scripts/integration_audit.py /path/to/ArchTitan-OS-main
    ```
 
+6. Open **Diagnostics** in the header. Check THM status, kernel interfaces,
+   THM decisions service, Hyprland connection and the explicit integration
+   blockers. Use **Copy report** to share check statuses without exposing
+   process details. Run the new test independently if needed:
+
+   ```bash
+   ctest --test-dir build -R '^diagnosticscore$' --output-on-failure
+   ```
+
 The app is still a read-only preview; safe termination and official
 `ArchTitan.TitanUI` integration are NOT implemented.

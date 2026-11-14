@@ -7,27 +7,10 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Qt6 6.2 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Network)
-
-# Native ArchTitan integration: directly compile the repository-owned THM
-# reader, not a duplicate copy. The official static protection registries
-# are header-only; dynamic PID registrations stay daemon-private.
-get_filename_component(ARCHTITAN_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
-set(ARCHTITAN_SYSMON_SRC "${ARCHTITAN_REPO_ROOT}/subsystems/titan-sysmon/src")
-set(ARCHTITAN_REGISTRY_SRC "${ARCHTITAN_REPO_ROOT}/titan-hwm-v3/core")
-if(NOT EXISTS "${ARCHTITAN_SYSMON_SRC}/thmstate.cpp" OR
-   NOT EXISTS "${ARCHTITAN_SYSMON_SRC}/thmstate.hpp" OR
-   NOT EXISTS "${ARCHTITAN_REGISTRY_SRC}/protected_registry.hpp")
-    message(FATAL_ERROR
-        "This native v0.8 build requires the complete ArchTitan-OS tree. "
-        "Extract at the repository root: subsystems/titan-task-manager/")
-endif()
-
 add_executable(titan-task-manager
     src/main.cpp
     src/ipcserver.h src/ipcserver.cpp
     src/thmclient.h src/thmclient.cpp
-    "${ARCHTITAN_SYSMON_SRC}/thmstate.hpp"
-    "${ARCHTITAN_SYSMON_SRC}/thmstate.cpp"
     src/thmstateparser.h src/thmstateparser.cpp
     src/systemmodel.h src/systemmodel.cpp
     src/procparser.h src/procparser.cpp
@@ -41,12 +24,14 @@ add_executable(titan-task-manager
     src/slicemodel.h src/slicemodel.cpp
     src/decisionsmodel.h src/decisionsmodel.cpp
     src/hyprlandmonitor.h src/hyprlandmonitor.cpp
+    src/diagnosticscore.h src/diagnosticscore.cpp
+    src/diagnosticsmodel.h src/diagnosticsmodel.cpp
     resources.qrc
 )
 target_link_libraries(titan-task-manager PRIVATE
     Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::Network
 )
-target_include_directories(titan-task-manager PRIVATE src "${ARCHTITAN_SYSMON_SRC}" "${ARCHTITAN_REGISTRY_SRC}")
+target_include_directories(titan-task-manager PRIVATE src)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(titan-task-manager PRIVATE -Wall -Wextra -Wpedantic)
 endif()
@@ -55,9 +40,10 @@ endif()
 include(CTest)
 if(BUILD_TESTING)
     find_package(Qt6 6.2 REQUIRED COMPONENTS Test)
-    add_executable(test_native_registry tests/native_registry_smoke.cpp)
-    target_include_directories(test_native_registry PRIVATE "${ARCHTITAN_REGISTRY_SRC}")
-    add_test(NAME native_registry COMMAND test_native_registry)
+    add_executable(test_diagnosticscore tests/test_diagnosticscore.cpp src/diagnosticscore.cpp)
+    target_include_directories(test_diagnosticscore PRIVATE src)
+    target_link_libraries(test_diagnosticscore PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME diagnosticscore COMMAND test_diagnosticscore)
 
     add_executable(test_thmstateparser tests/test_thmstateparser.cpp src/thmstateparser.cpp)
     target_include_directories(test_thmstateparser PRIVATE src)
@@ -66,9 +52,8 @@ if(BUILD_TESTING)
         THM_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/demo-thm-state.json")
     add_test(NAME thmstateparser COMMAND test_thmstateparser)
 
-    add_executable(test_thmclient tests/test_thmclient.cpp src/thmclient.cpp
-        src/thmstateparser.cpp "${ARCHTITAN_SYSMON_SRC}/thmstate.cpp")
-    target_include_directories(test_thmclient PRIVATE src "${ARCHTITAN_SYSMON_SRC}")
+    add_executable(test_thmclient tests/test_thmclient.cpp src/thmclient.cpp src/thmstateparser.cpp)
+    target_include_directories(test_thmclient PRIVATE src)
     target_link_libraries(test_thmclient PRIVATE Qt6::Core Qt6::Test)
     target_compile_definitions(test_thmclient PRIVATE
         THM_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/demo-thm-state.json")
@@ -87,13 +72,13 @@ if(BUILD_TESTING)
     add_executable(test_protectionfilter
         tests/test_protectionfilter.cpp
         src/protectionfilter.cpp src/procidentity.cpp)
-    target_include_directories(test_protectionfilter PRIVATE src "${ARCHTITAN_REGISTRY_SRC}")
+    target_include_directories(test_protectionfilter PRIVATE src)
     target_link_libraries(test_protectionfilter PRIVATE Qt6::Core Qt6::Test)
     add_test(NAME protectionfilter COMMAND test_protectionfilter)
 
     add_executable(test_actionpreflight
         tests/test_actionpreflight.cpp src/actionpreflight.cpp src/protectionfilter.cpp)
-    target_include_directories(test_actionpreflight PRIVATE src "${ARCHTITAN_REGISTRY_SRC}")
+    target_include_directories(test_actionpreflight PRIVATE src)
     target_link_libraries(test_actionpreflight PRIVATE Qt6::Core Qt6::Test)
     add_test(NAME actionpreflight COMMAND test_actionpreflight)
 

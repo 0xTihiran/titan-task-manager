@@ -3,6 +3,7 @@
 #include "procmodel.h"
 #include "slicemodel.h"
 #include "decisionsmodel.h"
+#include "diagnosticsmodel.h"
 #include "hyprlandmonitor.h"
 #include "systemmodel.h"
 #include "thmclient.h"
@@ -12,7 +13,6 @@
 #include <QDebug>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QQmlError>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QUrl>
@@ -48,17 +48,10 @@ int main(int argc,char** argv) {
     SliceModel slices;
     DecisionsModel decisions;
     HyprlandMonitor hyprland;
+    DiagnosticsModel diagnostics(&thm, &system, &decisions, &hyprland);
     WorkloadTree workloadTree(&thm, &processes);
     ActionController actions(&workloadTree, &thm);
     QQmlApplicationEngine engine;
-    engine.addImportPath(QStringLiteral("/usr/lib/qt6/qml"));
-    engine.addImportPath(QStringLiteral("/usr/local/lib/qt6/qml"));
-    const QString devImport = qEnvironmentVariable("ARCHTITAN_QML_IMPORT_PATH");
-    if (!devImport.isEmpty()) engine.addImportPath(devImport);
-    QObject::connect(&engine, &QQmlApplicationEngine::warnings, &engine,
-                     [](const QList<QQmlError>& warnings) {
-        for (const QQmlError& warning : warnings) qWarning().noquote() << warning.toString();
-    });
     engine.rootContext()->setContextProperty("thm",&thm);
     engine.rootContext()->setContextProperty("sys",&system);
     engine.rootContext()->setContextProperty("proc",&processes);
@@ -67,6 +60,7 @@ int main(int argc,char** argv) {
     engine.rootContext()->setContextProperty("slices",&slices);
     engine.rootContext()->setContextProperty("decisions",&decisions);
     engine.rootContext()->setContextProperty("hyprland",&hyprland);
+    engine.rootContext()->setContextProperty("diagnostics",&diagnostics);
     engine.load(QUrl("qrc:/titan-task-manager/Main.qml"));
     if(engine.rootObjects().isEmpty()) {qCritical()<<"Cannot load Main.qml"; return 1;}
     auto* window=qobject_cast<QQuickWindow*>(engine.rootObjects().first());

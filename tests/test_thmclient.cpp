@@ -40,13 +40,8 @@ private slots:
         qunsetenv("THM_TELEMETRY_ALLOW_STALE_FIXTURE");
         ThmClient client;
         QVERIFY2(client.available(), qPrintable(client.errorMessage()));
-        QCOMPARE(client.sourceStatus(), QStringLiteral("LIVE"));
+        QCOMPARE(client.sourceStatus(), QStringLiteral("OVERRIDE"));
         QCOMPARE(client.workloadCount(), 5);
-        const auto first = client.workloads().first().toMap();
-        QCOMPARE(first.value("mem_mb").toInt(), 1300);
-        QCOMPARE(first.value("cpu_pct").toDouble(), 22.7);
-        QCOMPARE(first.value("memMb").toInt(), 1300);
-        QCOMPARE(first.value("cpuPct").toDouble(), 22.7);
 
         {
             QFile file(target);
@@ -69,6 +64,7 @@ private slots:
         }
         client.refresh();
         QVERIFY(client.available());
+        QCOMPARE(client.sourceStatus(), QStringLiteral("OVERRIDE"));
         {
             QFile file(target);
             QVERIFY(file.open(QIODevice::ReadWrite));

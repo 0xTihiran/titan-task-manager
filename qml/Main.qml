@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import ArchTitan.TitanUI
 import "."
 import "components"
 ApplicationWindow {
@@ -48,14 +47,25 @@ ApplicationWindow {
                 Text { text:"WORKSPACE"; color:Theme.textLow; font.family:Theme.font; font.pixelSize:10; font.letterSpacing:1.3; Layout.leftMargin:13; Layout.bottomMargin:7 }
                 Repeater {
                     model: appWindow.pageTitles
-                    delegate: TitanSidebarItem {
+                    delegate: Rectangle {
                         required property int index
                         required property string modelData
-                        Layout.fillWidth: true
-                        label: modelData
-                        glyph: appWindow.pageSymbols[index]
-                        active: appWindow.selectedPage === index
-                        onClicked: appWindow.selectedPage = index
+                        Layout.fillWidth:true
+                        Layout.preferredHeight:45
+                        radius:10
+                        color: appWindow.selectedPage===index ? Theme.accentSoft : (navMouse.containsMouse ? Theme.surfaceHover : "transparent")
+                        border.color: appWindow.selectedPage===index ? Theme.accent : "transparent"
+                        Behavior on color { ColorAnimation { duration:110 } }
+                        Rectangle { width:3; height:19; radius:2; anchors.left:parent.left; anchors.verticalCenter:parent.verticalCenter; color:Theme.accent; visible:appWindow.selectedPage===index }
+                        Row {
+                            anchors.verticalCenter:parent.verticalCenter
+                            anchors.left:parent.left
+                            anchors.leftMargin:15
+                            spacing:13
+                            Text { text: appWindow.pageSymbols[index]; font.pixelSize:19; color:appWindow.selectedPage===index ? Theme.accent : Theme.textSecondary; anchors.verticalCenter:parent.verticalCenter }
+                            Text { text:modelData; font.family:Theme.font; font.pixelSize:13; font.weight:appWindow.selectedPage===index ? Font.DemiBold : Font.Normal; color: appWindow.selectedPage===index ? Theme.textPrimary : Theme.textSecondary; anchors.verticalCenter:parent.verticalCenter }
+                        }
+                        MouseArea { id:navMouse; anchors.fill:parent; hoverEnabled:true; cursorShape:Qt.PointingHandCursor; onClicked: appWindow.selectedPage=index }
                     }
                 }
                 Item { Layout.fillHeight:true }
@@ -65,7 +75,7 @@ ApplicationWindow {
                     Rectangle { width:8; height:8; radius:4; color:thm.sourceStatus === "LIVE" ? Theme.success : Theme.warning }
                     Text { text:thm.sourceStatus === "LIVE" ? "THM live" : (thm.sourceStatus === "DEMO" ? "THM demo data" : "THM " + thm.sourceStatus.toLowerCase()); color:Theme.textSecondary; font.family:Theme.font; font.pixelSize:12 }
                 }
-                Text { text:"THM v"+(thm.version || "—")+"  •  Native v0.8.0"; font.family:Theme.font; color:Theme.textLow; font.pixelSize:10; Layout.bottomMargin:11 }
+                Text { text:"THM v"+(thm.version || "—")+"  •  Dev preview 0.8.0"; font.family:Theme.font; color:Theme.textLow; font.pixelSize:10; Layout.bottomMargin:11 }
             }
         }
 
@@ -114,7 +124,8 @@ ApplicationWindow {
                             }
                         }
                     }
-                    ActionButton { label:"Refresh"; symbol:"↻"; onClicked:{ thm.refresh(); sys.refresh(); proc.refresh(); slices.refresh(); decisions.refresh(); hyprland.reconnect() } }
+                    ActionButton { label:"Diagnostics"; symbol:"⚙"; onClicked:{ diagnostics.refresh(); diagnosticsPopup.open() } }
+                    ActionButton { label:"Refresh"; symbol:"↻"; onClicked:{ thm.refresh(); sys.refresh(); proc.refresh(); slices.refresh(); decisions.refresh(); hyprland.reconnect(); diagnostics.refresh() } }
                 }
             }
             StackLayout {
@@ -131,6 +142,116 @@ ApplicationWindow {
                 WorkspacesPage { }
                 DecisionsPage { }
                 SlicesPage { }
+            }
+        }
+    }
+
+    Popup {
+        id: diagnosticsPopup
+        width: Math.min(720, appWindow.width - 70)
+        height: Math.min(660, appWindow.height - 64)
+        x: (appWindow.width - width) / 2
+        y: (appWindow.height - height) / 2
+        modal: true
+        focus: true
+        padding: 20
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        background: Rectangle {
+            color: Theme.surfaceRaised
+            radius: Theme.radius
+            border.color: Theme.border
+            border.width: 1
+        }
+        contentItem: ColumnLayout {
+            spacing: 14
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "SYSTEM DIAGNOSTICS"
+                    font.pixelSize: 20
+                    font.weight: Font.Bold
+                    color: Theme.textPrimary
+                }
+                Item { Layout.fillWidth: true }
+                ActionButton { label: "Close"; symbol: "×"; onClicked: diagnosticsPopup.close() }
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "Read-only checks • " + diagnostics.warningCount + " warnings • "
+                      + diagnostics.blockerCount + " integration blockers"
+                font.pixelSize: 12
+                color: Theme.textSecondary
+            }
+            ListView {
+                id: diagnosticsList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                spacing: 7
+                model: diagnostics.checks
+                delegate: Rectangle {
+                    required property var modelData
+                    width: diagnosticsList.width
+                    height: 75
+                    radius: 10
+                    color: Theme.surface
+                    border.color: Theme.border
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 13
+                        spacing: 13
+                        Rectangle {
+                            Layout.preferredWidth: 10
+                            Layout.preferredHeight: 10
+                            radius: 5
+                            color: modelData.status === "PASS" ? Theme.success
+                                : modelData.status === "WARN" ? Theme.warning
+                                : modelData.status === "BLOCKED" ? Theme.danger
+                                : Theme.accent
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+                            Text {
+                                text: modelData.title + "  •  " + modelData.status
+                                color: Theme.textPrimary
+                                font.pixelSize: 13
+                                font.weight: Font.DemiBold
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.detail
+                                color: Theme.textSecondary
+                                font.pixelSize: 11
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+                    }
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    text: "Checked " + diagnostics.lastCheckedUtc + " UTC"
+                    color: Theme.textLow
+                    font.pixelSize: 10
+                }
+                Item { Layout.fillWidth: true }
+                ActionButton { label: "Recheck"; symbol: "↻"; onClicked: diagnostics.refresh() }
+                ActionButton {
+                    label: "Copy report"
+                    symbol: "⧉"
+                    highlighted: true
+                    onClicked: { copyResult.text = diagnostics.copyReportToClipboard()
+                                                  ? "Copied" : "Clipboard unavailable" }
+                }
+            }
+            Text {
+                id: copyResult
+                Layout.fillWidth: true
+                text: "Report includes statuses only, not process names, PIDs, or paths."
+                color: Theme.textLow
+                font.pixelSize: 11
             }
         }
     }

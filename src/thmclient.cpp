@@ -1,6 +1,5 @@
 #include "thmclient.h"
 #include "thmstateparser.h"
-#include "thmstate.hpp" // From the repository-owned titan-sysmon subsystem
 
 #include <QDateTime>
 #include <QFile>
@@ -46,8 +45,11 @@ void ThmClient::refresh() {
         m_ageSeconds = static_cast<int>(qMin(age / 1000, qint64(std::numeric_limits<int>::max())));
 
     // File age is independent of the timestamp_ms payload's clock convention.
+    // A custom path is useful for real deployments and for fixture testing, but
+    // it must not be labelled as the default, verified production telemetry.
+    const bool customSource = m_sourcePath != QStringLiteral("/run/archtitan/thm-state.json");
     // Testing-only escape hatch is *not* allowed for the default live path.
-    const bool developerFixture = m_sourcePath != QStringLiteral("/run/archtitan/thm-state.json")
+    const bool developerFixture = customSource
         && qEnvironmentVariable("THM_TELEMETRY_ALLOW_STALE_FIXTURE") == QStringLiteral("1");
     if (!thmFileIsFresh(modified, now) && !developerFixture) {
         m_sourceStatus = QStringLiteral("STALE");
@@ -67,51 +69,19 @@ void ThmClient::refresh() {
         return;
     }
 
-    // Reuse the exact ArchTitan sysmon reader. THM writes via atomic rename:
-    // a rare file replacement between the guarded and native reads must fail
-    // closed, not combine mismatched generations.
-    const ThmState native = ThmReader::read(m_sourcePath);
-    if (!native.available || native.version != snapshot.version ||
-        native.workloadCount != snapshot.workloadCount ||
-        native.activeWorkloads != snapshot.activeWorkloads ||
-        native.workloads.size() != snapshot.workloads.size()) {
-        m_sourceStatus = QStringLiteral("INVALID");
-        m_error = QStringLiteral("THM snapshot changed or native parser disagrees; retrying");
-        emit updated();
-        return;
-    }
-
-    QVariantList mapped;
-    mapped.reserve(native.workloads.size());
-    for (qsizetype i=0; i<native.workloads.size(); ++i) {
-        const QVariantMap item = native.workloads.at(i).toMap();
-        const QVariantMap validated = snapshot.workloads.at(i).toMap();
-        if (item.value(QStringLiteral("id")).toInt() != validated.value(QStringLiteral("id")).toInt() ||
-            item.value(QStringLiteral("pid")).toInt() != validated.value(QStringLiteral("pid")).toInt()) {
-            m_sourceStatus = QStringLiteral("INVALID");
-            m_error = QStringLiteral("Native and guarded workload identity differs; retrying");
-            emit updated();
-            return;
-        }
-        QVariantMap normalized = item;
-        // titan-sysmon exports camelCase, but the Task Manager pages and THM
-        // publisher use snake_case. Preserve *both* without guessing fields.
-        normalized.insert(QStringLiteral("mem_mb"), item.value(QStringLiteral("memMb")));
-        normalized.insert(QStringLiteral("cpu_pct"), item.value(QStringLiteral("cpuPct")));
-        mapped.append(normalized);
-    }
-    m_version = native.version;
-    m_pressureLevel = native.pressureLevel;
-    m_governor = native.governor;
+    m_version = snapshot.version;
+    m_pressureLevel = snapshot.pressureLevel;
+    m_governor = snapshot.governor;
     m_lastDecision = snapshot.lastDecision;
-    m_memoryUsedPct = native.memUsedPct;
-    m_workloadCount = native.workloadCount;
-    m_activeWorkloads = native.activeWorkloads;
-    m_seenProcesses = native.processesSeen;
-    m_unmanagedProcesses = native.processesUnmanaged;
-    m_workloads = std::move(mapped);
+    m_memoryUsedPct = snapshot.memoryUsedPct;
+    m_workloadCount = snapshot.workloadCount;
+    m_activeWorkloads = snapshot.activeWorkloads;
+    m_seenProcesses = snapshot.seenProcesses;
+    m_unmanagedProcesses = snapshot.unmanagedProcesses;
+    m_workloads = std::move(snapshot.workloads);
     m_topUnmanaged = std::move(snapshot.topUnmanaged);
     m_available = true;
-    m_sourceStatus = developerFixture ? QStringLiteral("DEMO") : QStringLiteral("LIVE");
+    m_sourceStatus = developerFixture ? QStringLiteral("DEMO")
+                    : customSource ? QStringLiteral("OVERRIDE") : QStringLiteral("LIVE");
     emit updated();
 }

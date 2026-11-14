@@ -9,6 +9,8 @@ class ThmClient final : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool available READ available NOTIFY updated)
     Q_PROPERTY(QString sourcePath READ sourcePath CONSTANT)
+    // LIVE = recent default-path data; OVERRIDE = recent custom-path data;
+    // DEMO = explicit fixture mode; none of these authenticates the producer.
     Q_PROPERTY(QString sourceStatus READ sourceStatus NOTIFY updated)
     Q_PROPERTY(QString errorMessage READ errorMessage NOTIFY updated)
     Q_PROPERTY(int telemetryAgeSeconds READ telemetryAgeSeconds NOTIFY updated)

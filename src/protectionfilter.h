@@ -3,13 +3,12 @@
 #include <QVariantMap>
 #include <QtGlobal>
 
-// Conservative, review-only protection classification. Uses the official
-// repo-owned THM *static* names and executable prefixes, with additional
-// conservative rules. Dynamic protected PID registrations remain daemon-only;
-// no process action may be authorized by this classifier.
+// Conservative, review-only protection classification. IMPORTANT:
+// this is NOT the official titan-hwm protected_registry.hpp, which must be
+// imported from the ArchTitan OS repo before any action can be enabled.
 struct ProtectionAssessment {
     bool protectedProcess = false;
-    bool canTerminate = false; // ALWAYS false in v0.8
+    bool canTerminate = false; // ALWAYS false in v0.5
     QString status;            // "PROTECTED" or "UNVERIFIED"
     QString reason;
 };
