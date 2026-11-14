@@ -75,7 +75,7 @@ ApplicationWindow {
                     Rectangle { width:8; height:8; radius:4; color:thm.available ? Theme.success : Theme.warning }
                     Text { text:thm.available ? "THM connected" : "THM unavailable"; color:Theme.textSecondary; font.family:Theme.font; font.pixelSize:12 }
                 }
-                Text { text:"THM v"+(thm.version || "—")+"  •  Dev preview 0.5.0"; font.family:Theme.font; color:Theme.textLow; font.pixelSize:10; Layout.bottomMargin:11 }
+                Text { text:"THM v"+(thm.version || "—")+"  •  Dev preview 0.6.0"; font.family:Theme.font; color:Theme.textLow; font.pixelSize:10; Layout.bottomMargin:11 }
             }
         }
 

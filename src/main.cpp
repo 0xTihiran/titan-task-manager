@@ -1,3 +1,4 @@
+#include "actioncontroller.h"
 #include "ipcserver.h"
 #include "procmodel.h"
 #include "slicemodel.h"
@@ -47,11 +48,13 @@ int main(int argc,char** argv) {
     DecisionsModel decisions;
     HyprlandMonitor hyprland;
     WorkloadTree workloadTree(&thm, &processes);
+    ActionController actions(&workloadTree, &thm);
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("thm",&thm);
     engine.rootContext()->setContextProperty("sys",&system);
     engine.rootContext()->setContextProperty("proc",&processes);
     engine.rootContext()->setContextProperty("workloadTree",&workloadTree);
+    engine.rootContext()->setContextProperty("actions",&actions);
     engine.rootContext()->setContextProperty("slices",&slices);
     engine.rootContext()->setContextProperty("decisions",&decisions);
     engine.rootContext()->setContextProperty("hyprland",&hyprland);

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import "."
 import "components"
 Item {
@@ -8,6 +9,12 @@ Item {
     property string sortMode:"CPU"
     property string filterMode:"All"
     property int selectedPid:-1
+    property var lastReview: ({})
+    function doReview(pid, force) {
+        // Explicitly a PREVIEW. C++ always refuses to signal in v0.6.
+        page.lastReview = actions.reviewTermination(pid, force)
+        reviewResultDialog.open()
+    }
 
     function filteredProcesses() {
         var items=workloadTree.processes.slice()
@@ -38,7 +45,7 @@ Item {
             ColumnLayout {
                 spacing:4
                 Text { text:"Processes"; color:Theme.textPrimary; font.family:Theme.font; font.pixelSize:23; font.weight:Font.Bold }
-                Text { text:"Read-only Linux processes · THM assignment and protection diagnostics"; color:Theme.textSecondary; font.pixelSize:12 }
+                Text { text:"Live Linux processes · THM ownership and action safety preview"; color:Theme.textSecondary; font.pixelSize:12 }
             }
             Item { Layout.fillWidth:true }
             StatusChip { label:String(proc.count)+" running"; tone:Theme.accent }
@@ -129,7 +136,7 @@ Item {
         Panel {
             id:inspector
             Layout.fillWidth:true
-            Layout.preferredHeight:page.selectedPid>0 ? 223 : 45
+            Layout.preferredHeight:page.selectedPid>0 ? 285 : 45
             ColumnLayout {
                 anchors.fill:parent
                 anchors.margins:12
@@ -161,9 +168,142 @@ Item {
                         color:Theme.textSecondary; font.pixelSize:11; Layout.fillWidth:true
                         elide:Text.ElideRight
                     }
+                    RowLayout {
+                        spacing: 9
+                        ActionButton {
+                            label: "Review Terminate"; symbol: "!"
+                            onClicked: {
+                                if (page.selectedPid > 1) {
+                                    confirmRequest.pid = page.selectedPid
+                                    confirmRequest.force = false
+                                    confirmRequest.open()
+                                }
+                            }
+                        }
+                        ActionButton {
+                            label: "Review Force Kill"; symbol: "!!"
+                            onClicked: {
+                                if (page.selectedPid > 1) {
+                                    confirmRequest.pid = page.selectedPid
+                                    confirmRequest.force = true
+                                    confirmRequest.open()
+                                }
+                            }
+                        }
+                        Text { text: "PREVIEW ONLY — no signal sent"; color: Theme.warning; font.pixelSize: 11 }
+                    }
                 }
             }
         }
-        Text { text:"Read-only v0.5: PROTECTED = deny; VERIFY = insufficient proof. Neither state permits termination."; color:Theme.textLow; font.pixelSize:11 }
+        Text { text:"v0.6 safety preview: review requests are logged and ALWAYS denied; actual termination is not enabled."; color:Theme.textLow; font.pixelSize:11 }
+    }
+
+    // These dialogs exercise the future two-stage confirmation UX, but the
+    // backend contains zero process-signalling APIs and refuses every request.
+    Dialog {
+        id: confirmRequest
+        property int pid: -1
+        property bool force: false
+        width: 470
+        x: Math.max(0, (page.width - width) / 2)
+        y: Math.max(0, (page.height - height) / 2)
+        modal: true
+        focus: true
+        title: "Review process action"
+        standardButtons: Dialog.NoButton
+        background: Rectangle { color: Theme.surfaceRaised; radius: Theme.radius; border.color: Theme.border }
+        contentItem: ColumnLayout {
+            spacing: 14
+            Text {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                text: "Review " + (confirmRequest.force ? "SIGKILL" : "SIGTERM") + " request for PID " + confirmRequest.pid + "?"
+                color: Theme.textPrimary; font.pixelSize: 15; font.weight: Font.DemiBold
+            }
+            Text {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                text: "This is a read-only preview. No signal will be sent. The requested action and denial reason will be audited."
+                color: Theme.textSecondary; font.pixelSize: 12
+            }
+            RowLayout {
+                Item { Layout.fillWidth: true }
+                ActionButton { label: "Cancel"; symbol: "×"; onClicked: confirmRequest.close() }
+                ActionButton {
+                    label: confirmRequest.force ? "Continue review" : "Review & log"
+                    symbol: "→"; highlighted: true
+                    onClicked: {
+                        if (confirmRequest.force) {
+                            confirmRequest.close()
+                            doubleConfirm.pid = confirmRequest.pid
+                            doubleConfirm.open()
+                        } else {
+                            var requestPid = confirmRequest.pid
+                            confirmRequest.close()
+                            page.doReview(requestPid, false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Dialog {
+        id: doubleConfirm
+        property int pid: -1
+        width: 470
+        x: Math.max(0, (page.width - width) / 2)
+        y: Math.max(0, (page.height - height) / 2)
+        modal: true
+        focus: true
+        title: "Second confirmation — force action review"
+        standardButtons: Dialog.NoButton
+        background: Rectangle { color: Theme.surfaceRaised; radius: Theme.radius; border.color: Theme.border }
+        contentItem: ColumnLayout {
+            spacing: 14
+            Text {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                text: "Review a force-kill request for PID " + doubleConfirm.pid + "? This still sends NO signal."
+                color: Theme.warning; font.pixelSize: 14
+            }
+            RowLayout {
+                Item { Layout.fillWidth: true }
+                ActionButton { label: "Cancel"; symbol: "×"; onClicked: doubleConfirm.close() }
+                ActionButton {
+                    label: "Review & log"; symbol: "→"; highlighted: true
+                    onClicked: {
+                        var requestPid = doubleConfirm.pid
+                        doubleConfirm.close()
+                        page.doReview(requestPid, true)
+                    }
+                }
+            }
+        }
+    }
+    Dialog {
+        id: reviewResultDialog
+        width: 480
+        x: Math.max(0, (page.width - width) / 2)
+        y: Math.max(0, (page.height - height) / 2)
+        modal: true
+        title: "Process action denied (preview)"
+        standardButtons: Dialog.NoButton
+        background: Rectangle { color: Theme.surfaceRaised; radius: Theme.radius; border.color: Theme.border }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text { text: "NO SIGNAL SENT"; color: Theme.warning; font.pixelSize: 15; font.weight: Font.Bold }
+            Text {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                text: String(page.lastReview.code || "BLOCKED") + ": " + String(page.lastReview.reason || "Denied")
+                color: Theme.textPrimary; font.pixelSize: 13
+            }
+            Text {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                text: page.lastReview.logged ? "Review written to " + page.lastReview.auditPath :
+                     "Warning: Could not write the audit log."
+                color: Theme.textSecondary; font.pixelSize: 11
+            }
+            RowLayout {
+                Item { Layout.fillWidth: true }
+                ActionButton { label: "Close"; symbol: "✓"; highlighted: true; onClicked: reviewResultDialog.close() }
+            }
+        }
     }
 }
