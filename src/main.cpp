@@ -12,6 +12,7 @@
 #include <QDebug>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQmlError>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QUrl>
@@ -50,6 +51,14 @@ int main(int argc,char** argv) {
     WorkloadTree workloadTree(&thm, &processes);
     ActionController actions(&workloadTree, &thm);
     QQmlApplicationEngine engine;
+    engine.addImportPath(QStringLiteral("/usr/lib/qt6/qml"));
+    engine.addImportPath(QStringLiteral("/usr/local/lib/qt6/qml"));
+    const QString devImport = qEnvironmentVariable("ARCHTITAN_QML_IMPORT_PATH");
+    if (!devImport.isEmpty()) engine.addImportPath(devImport);
+    QObject::connect(&engine, &QQmlApplicationEngine::warnings, &engine,
+                     [](const QList<QQmlError>& warnings) {
+        for (const QQmlError& warning : warnings) qWarning().noquote() << warning.toString();
+    });
     engine.rootContext()->setContextProperty("thm",&thm);
     engine.rootContext()->setContextProperty("sys",&system);
     engine.rootContext()->setContextProperty("proc",&processes);

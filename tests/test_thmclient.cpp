@@ -42,6 +42,11 @@ private slots:
         QVERIFY2(client.available(), qPrintable(client.errorMessage()));
         QCOMPARE(client.sourceStatus(), QStringLiteral("LIVE"));
         QCOMPARE(client.workloadCount(), 5);
+        const auto first = client.workloads().first().toMap();
+        QCOMPARE(first.value("mem_mb").toInt(), 1300);
+        QCOMPARE(first.value("cpu_pct").toDouble(), 22.7);
+        QCOMPARE(first.value("memMb").toInt(), 1300);
+        QCOMPARE(first.value("cpuPct").toDouble(), 22.7);
 
         {
             QFile file(target);

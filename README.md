@@ -1,54 +1,56 @@
-# TITAN Task Manager — Dark Edition v0.7 (telemetry reliability)
+# TITAN Task Manager v0.8 — ArchTitan OS native integration (read-only)
 
-This release builds on the supplied v0.6 dark Qt6/C++20 project. Its **next
-verified step** is read-only telemetry reliability and native integration
-preparation; official ArchTitan source has not been supplied.
+This source package was updated using the **actual uploaded ArchTitan OS
+repository** and the previous **v0.7** Task Manager project. It keeps the
+modern UI while adopting real repository-owned THM and TitanUI interfaces.
 
-## v0.7 additions
+### Implemented in v0.8 source
 
-- Typed, strict THM JSON validation in `src/thmstateparser.*`.
-- Telemetry-file freshness checks: stale / missing / malformed payloads clear
-  all previous THM workload data and present an explicit status in the UI.
-- Unit tests for parser and client status transitions (total: eight test suites).
-- Optional discovery script `scripts/integration_audit.py` for the full OS checkout.
-- Existing dark preview UI, workload/process tree, Decisions, Slices,
-  Hyprland, protection diagnostics and review-only dialogs remain unchanged.
-- **NO process signalling.** No shared ArchTitan files modified.
+- Compile existing `subsystems/titan-sysmon/src/thmstate.cpp` directly
+  (do not fork or copy it into this subsystem).
+- Validate and compare canonical THM state; expose `memMb/cpuPct` AND
+  `mem_mb/cpu_pct` for UI compatibility.
+- Import native `ArchTitan.TitanUI.TitanTheme` semantic colors, typography,
+  and radii (no preview RGB tokens).
+- Use shared `TitanButton` and `TitanSidebarItem` for actions/navigation.
+- Read official THM static protected-name/executable-prefix and browser sets,
+  keeping additional conservative restrictions.
+- Retain all 8 previous QtTest suites and add a standalone static-registry
+  C++ smoke test.
+- Keep all process action reviews **simulation-only**. Never signal a process.
 
-See `docs/V0_7_NOTES.md` for detailed behavior, test procedures, and scope.
+### Build in the full ArchTitan OS repository
 
-## Build
+Extract this ZIP at the OS repository root to merge files into
+`subsystems/titan-task-manager/`. **Review diffs** before overwriting anything.
+The ZIP is an overlay, not the complete OS repository.
 
 ```bash
 sudo pacman -S --needed base-devel cmake qt6-base qt6-declarative
 cd subsystems/titan-task-manager
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build -j"$(nproc)"
+chmod +x build.sh run-dev.sh
+./build.sh
 ctest --test-dir build --output-on-failure
-./build/titan-task-manager
+./run-dev.sh
 ```
 
-## Synthetic-data preview
+**Run-time dependency:** ArchTitan's `ArchTitan.TitanUI` QML module, either
+installed in the OS or built from sibling `titan-ui/`. If you build its module
+into the default `titan-ui/build`, `run-dev.sh` configures the import path.
 
-Stop any existing instance first. This fixture will be labelled **DEMO**.
+To exercise synthetic THM telemetry, stop any running instance and use:
 
 ```bash
 THM_TELEMETRY_ALLOW_STALE_FIXTURE=1 \
 THM_TELEMETRY_PATH="$PWD/tests/fixtures/demo-thm-state.json" \
-./build/titan-task-manager
+./run-dev.sh
 ```
 
-## Still waiting on the real OS source
+The example PIDs are fictional and should display as missing roots.
 
-- `subsystems/titan-sysmon/src/thmstate.{hpp,cpp}`
-- `titan-hwm-v3/core/protected_registry.hpp`
-- `ArchTitan.TitanUI` and `TitanTheme` exported definitions
+**Read `docs/V0_8_NATIVE_INTEGRATION.md`** for exact native source paths,
+limitations, test details and the remaining OS team approval gates.
 
-The existing `qml/Theme.qml` is a modern **dark preview**; it does not yet use
-official TitanTheme tokens. Termination remains intentionally impossible.
-
-## Validation
-
-Archive integrity, data fixtures, and project references can be checked in the
-authoring environment. Qt6 development libraries are not installed here, so
-**CMake compile, all CTests, and live GUI behavior have not been verified**.
+**Validation:** project/file checks and non-Qt native-registry smoke test can
+be run in the authoring environment. Qt6 compilation, ctest and the GUI are
+not verified there and must be tested inside ArchTitan.

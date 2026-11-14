@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import ArchTitan.TitanUI
 import "."
 import "components"
 ApplicationWindow {
@@ -47,25 +48,14 @@ ApplicationWindow {
                 Text { text:"WORKSPACE"; color:Theme.textLow; font.family:Theme.font; font.pixelSize:10; font.letterSpacing:1.3; Layout.leftMargin:13; Layout.bottomMargin:7 }
                 Repeater {
                     model: appWindow.pageTitles
-                    delegate: Rectangle {
+                    delegate: TitanSidebarItem {
                         required property int index
                         required property string modelData
-                        Layout.fillWidth:true
-                        Layout.preferredHeight:45
-                        radius:10
-                        color: appWindow.selectedPage===index ? Theme.accentSoft : (navMouse.containsMouse ? Theme.surfaceHover : "transparent")
-                        border.color: appWindow.selectedPage===index ? Theme.accent : "transparent"
-                        Behavior on color { ColorAnimation { duration:110 } }
-                        Rectangle { width:3; height:19; radius:2; anchors.left:parent.left; anchors.verticalCenter:parent.verticalCenter; color:Theme.accent; visible:appWindow.selectedPage===index }
-                        Row {
-                            anchors.verticalCenter:parent.verticalCenter
-                            anchors.left:parent.left
-                            anchors.leftMargin:15
-                            spacing:13
-                            Text { text: appWindow.pageSymbols[index]; font.pixelSize:19; color:appWindow.selectedPage===index ? Theme.accent : Theme.textSecondary; anchors.verticalCenter:parent.verticalCenter }
-                            Text { text:modelData; font.family:Theme.font; font.pixelSize:13; font.weight:appWindow.selectedPage===index ? Font.DemiBold : Font.Normal; color: appWindow.selectedPage===index ? Theme.textPrimary : Theme.textSecondary; anchors.verticalCenter:parent.verticalCenter }
-                        }
-                        MouseArea { id:navMouse; anchors.fill:parent; hoverEnabled:true; cursorShape:Qt.PointingHandCursor; onClicked: appWindow.selectedPage=index }
+                        Layout.fillWidth: true
+                        label: modelData
+                        glyph: appWindow.pageSymbols[index]
+                        active: appWindow.selectedPage === index
+                        onClicked: appWindow.selectedPage = index
                     }
                 }
                 Item { Layout.fillHeight:true }
@@ -75,7 +65,7 @@ ApplicationWindow {
                     Rectangle { width:8; height:8; radius:4; color:thm.sourceStatus === "LIVE" ? Theme.success : Theme.warning }
                     Text { text:thm.sourceStatus === "LIVE" ? "THM live" : (thm.sourceStatus === "DEMO" ? "THM demo data" : "THM " + thm.sourceStatus.toLowerCase()); color:Theme.textSecondary; font.family:Theme.font; font.pixelSize:12 }
                 }
-                Text { text:"THM v"+(thm.version || "—")+"  •  Dev preview 0.7.0"; font.family:Theme.font; color:Theme.textLow; font.pixelSize:10; Layout.bottomMargin:11 }
+                Text { text:"THM v"+(thm.version || "—")+"  •  Native v0.8.0"; font.family:Theme.font; color:Theme.textLow; font.pixelSize:10; Layout.bottomMargin:11 }
             }
         }
 

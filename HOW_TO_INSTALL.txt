@@ -1,0 +1,18 @@
+TITAN Task Manager v0.8 Native Integration — source overlay
+
+This ZIP contains ONLY files under subsystems/titan-task-manager/.
+Use the uploaded complete ArchTitan-OS source tree as the base.
+
+1. Back up your current task manager subsystem.
+2. Extract the overlay at the ArchTitan-OS repository root.
+3. Inspect the diff before merging, particularly local subsystem edits.
+4. cd subsystems/titan-task-manager
+5. ./build.sh
+6. ctest --test-dir build --output-on-failure
+7. ./run-dev.sh
+
+To use the real TitanUI module, build/install titan-ui in your ArchTitan dev
+session or provide ARCHTITAN_QML_IMPORT_PATH to its compiled QML root.
+
+No airootfs, Hyprland, profiledef.sh, menu, launcher or shared OS files are
+modified by this overlay. Process termination remains disabled.
