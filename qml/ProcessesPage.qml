@@ -11,7 +11,7 @@ Item {
     property int selectedPid:-1
     property var lastReview: ({})
     function doReview(pid, force) {
-        // Explicitly a PREVIEW. C++ always refuses to signal in v0.6.
+        // Explicitly a PREVIEW. C++ always refuses to signal in v0.7.
         page.lastReview = actions.reviewTermination(pid, force)
         reviewResultDialog.open()
     }
@@ -195,7 +195,7 @@ Item {
                 }
             }
         }
-        Text { text:"v0.6 safety preview: review requests are logged and ALWAYS denied; actual termination is not enabled."; color:Theme.textLow; font.pixelSize:11 }
+        Text { text:"v0.7 safety preview: review requests are logged and ALWAYS denied; actual termination is not enabled."; color:Theme.textLow; font.pixelSize:11 }
     }
 
     // These dialogs exercise the future two-stage confirmation UX, but the

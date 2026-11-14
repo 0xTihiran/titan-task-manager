@@ -82,7 +82,7 @@ QVariantMap ActionController::reviewTermination(const qint64 pid, const bool for
                             {"pid", pid}, {"name", cached.value("name").toString()},
                             {"uid", cached.value("uid")}, {"requested_signal", signalName},
                             {"outcome", verdict.code}, {"reason", verdict.reason},
-                            {"executed", false}, {"version", QStringLiteral("0.6.0-preview")}};
+                            {"executed", false}, {"version", QStringLiteral("0.7.0-readonly")}};
     const bool logged = appendAudit(audit);
     result.insert("logged", logged);
     result.insert("auditPath", auditLogPath());

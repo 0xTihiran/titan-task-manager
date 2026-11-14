@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(titan-task-manager VERSION 0.6.0 LANGUAGES CXX)
+project(titan-task-manager VERSION 0.7.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
@@ -11,6 +11,7 @@ add_executable(titan-task-manager
     src/main.cpp
     src/ipcserver.h src/ipcserver.cpp
     src/thmclient.h src/thmclient.cpp
+    src/thmstateparser.h src/thmstateparser.cpp
     src/systemmodel.h src/systemmodel.cpp
     src/procparser.h src/procparser.cpp
     src/procidentity.h src/procidentity.cpp
@@ -37,6 +38,20 @@ endif()
 include(CTest)
 if(BUILD_TESTING)
     find_package(Qt6 6.2 REQUIRED COMPONENTS Test)
+    add_executable(test_thmstateparser tests/test_thmstateparser.cpp src/thmstateparser.cpp)
+    target_include_directories(test_thmstateparser PRIVATE src)
+    target_link_libraries(test_thmstateparser PRIVATE Qt6::Core Qt6::Test)
+    target_compile_definitions(test_thmstateparser PRIVATE
+        THM_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/demo-thm-state.json")
+    add_test(NAME thmstateparser COMMAND test_thmstateparser)
+
+    add_executable(test_thmclient tests/test_thmclient.cpp src/thmclient.cpp src/thmstateparser.cpp)
+    target_include_directories(test_thmclient PRIVATE src)
+    target_link_libraries(test_thmclient PRIVATE Qt6::Core Qt6::Test)
+    target_compile_definitions(test_thmclient PRIVATE
+        THM_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/demo-thm-state.json")
+    add_test(NAME thmclient COMMAND test_thmclient)
+
     add_executable(test_procparser tests/test_procparser.cpp src/procparser.cpp)
     target_include_directories(test_procparser PRIVATE src)
     target_link_libraries(test_procparser PRIVATE Qt6::Core Qt6::Test)

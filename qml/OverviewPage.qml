@@ -57,7 +57,7 @@ Item {
                     Layout.fillWidth:true
                     caption:"ACTIVE WORKLOADS"
                     value:thm.available ? String(thm.activeWorkloads) : "—"
-                    footnote:thm.available ? String(thm.workloadCount)+" tracked workloads" : "THM telemetry unavailable"
+                    footnote:thm.available ? String(thm.workloadCount)+" tracked workloads" : "THM " + thm.sourceStatus.toLowerCase() + ": " + thm.errorMessage
                     symbol:"◈"
                     progress:thm.workloadCount>0 ? 100*thm.activeWorkloads/thm.workloadCount : 0
                     tone:Theme.warning

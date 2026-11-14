@@ -5,7 +5,7 @@
 class WorkloadTree;
 class ThmClient;
 
-// v0.6: user-confirmed action REQUEST REVIEW only. No kill(), pidfd or SIGTERM.
+// v0.7: user-confirmed action REQUEST REVIEW only. No kill(), pidfd or SIGTERM.
 // Every path fails closed until official THM registry can be imported/tested.
 class ActionController final : public QObject {
     Q_OBJECT

@@ -1,36 +1,23 @@
-# TITAN Task Manager — Dark Edition v0.6 (action review preview)
+# TITAN Task Manager — Dark Edition v0.7 (telemetry reliability)
 
-C++20 + Qt6/QML read-only ArchTitan task manager. This version **does not** terminate
-processes. It adds fail-closed preflight verification, audit logging and two-step
-confirmation *preview* UX built on the user's v0.5 project.
+This release builds on the supplied v0.6 dark Qt6/C++20 project. Its **next
+verified step** is read-only telemetry reliability and native integration
+preparation; official ArchTitan source has not been supplied.
 
-## v0.6 additions
+## v0.7 additions
 
-- `ActionController::reviewTermination(pid, force)` reads fresh `/proc` data,
-  checks PID/starttime, executable, cgroup and UID against the current cached
-  snapshot, then refuses the action with a specific reason.
-- `ActionPreflight` is pure and independently unit-tested. No code path may
-  send a signal: `actionsEnabled` is always false; `maySignal` is always false.
-- Inspector has **Review Terminate** and **Review Force Kill** previews.
-  Force review has a second confirmation. Both produce **no signal**.
-- Review attempts are logged as JSON lines under
-  `$XDG_STATE_HOME/titan-task-manager/actions.log` or
-  `~/.local/state/titan-task-manager/actions.log`.
-  Log entries are append-only in the app; this is NOT an immutable/tamper-proof audit system.
-- Six QtTest suites including `actionpreflight`.
-- Dark preview theme and six pages retained.
+- Typed, strict THM JSON validation in `src/thmstateparser.*`.
+- Telemetry-file freshness checks: stale / missing / malformed payloads clear
+  all previous THM workload data and present an explicit status in the UI.
+- Unit tests for parser and client status transitions (total: eight test suites).
+- Optional discovery script `scripts/integration_audit.py` for the full OS checkout.
+- Existing dark preview UI, workload/process tree, Decisions, Slices,
+  Hyprland, protection diagnostics and review-only dialogs remain unchanged.
+- **NO process signalling.** No shared ArchTitan files modified.
 
-## Important deployment limitation
+See `docs/V0_7_NOTES.md` for detailed behavior, test procedures, and scope.
 
-The real ArchTitan sources for `titan-hwm-v3/core/protected_registry.hpp`,
-`subsystems/titan-sysmon/src/thmstate.*` and `ArchTitan.TitanUI` have **not**
-been provided. The v0.5 protection list is provisional; THM telemetry only
-provides root PIDs and cannot conclusively prove all process membership.
-**Do not enable real SIGTERM/SIGKILL, merge to OS integration or deploy in an ISO**
-until the official registry is imported, runtime checks are revalidated and
-VM tests pass. Shared ArchTitan files were not modified.
-
-## Build and test on Arch Linux / ArchTitan
+## Build
 
 ```bash
 sudo pacman -S --needed base-devel cmake qt6-base qt6-declarative
@@ -41,19 +28,27 @@ ctest --test-dir build --output-on-failure
 ./build/titan-task-manager
 ```
 
-On the **Processes** page, select a process and click `Review Terminate` or
-`Review Force Kill`. Confirm to receive a blocked preflight result; no process
-signal is sent. Logs go to the path displayed in the dialog.
+## Synthetic-data preview
 
-To test synthetic THM sample data, stop any running task manager first:
+Stop any existing instance first. This fixture will be labelled **DEMO**.
 
 ```bash
-THM_TELEMETRY_PATH="$PWD/tests/fixtures/demo-thm-state.json" ./build/titan-task-manager
+THM_TELEMETRY_ALLOW_STALE_FIXTURE=1 \
+THM_TELEMETRY_PATH="$PWD/tests/fixtures/demo-thm-state.json" \
+./build/titan-task-manager
 ```
 
-## Verification status
+## Still waiting on the real OS source
 
-The source archive and project wiring can be validated in the authoring
-container, but Qt6 development packages are unavailable here so compilation,
-CTest, and GUI runtime are **not verified**. Run these on the ArchTitan target.
-See `docs/V0_6_NOTES.md` for test cases and subsequent work.
+- `subsystems/titan-sysmon/src/thmstate.{hpp,cpp}`
+- `titan-hwm-v3/core/protected_registry.hpp`
+- `ArchTitan.TitanUI` and `TitanTheme` exported definitions
+
+The existing `qml/Theme.qml` is a modern **dark preview**; it does not yet use
+official TitanTheme tokens. Termination remains intentionally impossible.
+
+## Validation
+
+Archive integrity, data fixtures, and project references can be checked in the
+authoring environment. Qt6 development libraries are not installed here, so
+**CMake compile, all CTests, and live GUI behavior have not been verified**.
